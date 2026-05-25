@@ -1,0 +1,6 @@
+python-dotenv
+pandas
+flask
+azure-ai-textanalytics
+azure-search-documents
+openai
