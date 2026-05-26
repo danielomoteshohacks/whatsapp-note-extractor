@@ -216,3 +216,13 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Environment variables
+.env
+
+# WhatsApp export data
+data/
+
+# Virtual environment
+venv/
+.venv/
