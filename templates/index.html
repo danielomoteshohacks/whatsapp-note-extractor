@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Note Extractor</title>
+    <style>
+        /* ── RESET AND BASE ───────────────────────────────────────────────── */
+        /* Remove default browser margins and padding, use border-box sizing
+           so padding is included in element width calculations */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Set the base font and background for the entire page */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background-color: #f5f5f7;
+            color: #1a1a2e;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ── UPLOAD CARD ──────────────────────────────────────────────────── */
+        /* The white card in the centre of the page */
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 48px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+            text-align: center;
+        }
+
+        /* The small label above the title */
+        .label {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #6b6b8a;
+            margin-bottom: 12px;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #6b6b8a;
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+
+        /* ── FILE UPLOAD AREA ─────────────────────────────────────────────── */
+        /* The dashed drop zone where users select their file */
+        .upload-area {
+            border: 2px dashed #ccccdd;
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 24px;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        /* Highlight the border when the user hovers over the upload area */
+        .upload-area:hover {
+            border-color: #1a1a2e;
+        }
+
+        .upload-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .upload-area p {
+            font-size: 14px;
+            color: #6b6b8a;
+            margin-bottom: 4px;
+        }
+
+        .upload-area small {
+            font-size: 12px;
+            color: #aaaaaa;
+        }
+
+        /* Hide the default file input — we trigger it via the upload area click */
+        #file-input {
+            display: none;
+        }
+
+        /* Show the selected filename here once a file is chosen */
+        #file-name {
+            font-size: 13px;
+            color: #1a1a2e;
+            margin-top: 10px;
+            font-weight: 500;
+        }
+
+        /* ── SUBMIT BUTTON ────────────────────────────────────────────────── */
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background-color: #1a1a2e;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #2d2d5a;
+        }
+
+        /* ── ERROR MESSAGE ────────────────────────────────────────────────── */
+        /* Shown when the user uploads a non-zip file */
+        .error {
+            background-color: #fff0f0;
+            color: #cc0000;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <p class="label">IEEE CS x GCE AI/ML Track</p>
+        <h1>WhatsApp Note Extractor</h1>
+        <p class="subtitle">
+            Upload a WhatsApp group chat export and get an instant
+            breakdown of activity, contributors, and more.
+        </p>
+
+        <!-- Show error message if Flask passed one (e.g. wrong file type) -->
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% endif %}
+
+        <!--
+            The form submits to the same URL (/) using POST.
+            enctype="multipart/form-data" is required for file uploads —
+            without it, the file contents are not sent to the server.
+        -->
+        <form action="/" method="POST" enctype="multipart/form-data">
+
+            <!--
+                Clicking the upload area triggers a click on the hidden
+                file input, which opens the file picker dialog.
+            -->
+            <div class="upload-area" onclick="document.getElementById('file-input').click()">
+                <div class="upload-icon">+</div>
+                <p>Click to select your WhatsApp export</p>
+                <small>Accepts .zip files only</small>
+                <!-- Shows the selected filename after the user picks a file -->
+                <div id="file-name">No file selected</div>
+            </div>
+
+            <!--
+                The actual file input. name="file" must match what
+                Flask looks for in request.files["file"] in app.py.
+            -->
+            <input
+                type="file"
+                id="file-input"
+                name="file"
+                accept=".zip"
+                onchange="document.getElementById('file-name').textContent = this.files[0].name"
+            >
+
+            <button type="submit" class="btn">Analyse Chat</button>
+        </form>
+    </div>
+</body>
+</html>

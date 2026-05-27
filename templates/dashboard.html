@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Dashboard</title>
+
+    <!-- Chart.js from CDN — gives us professional animated charts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+    <style>
+        /* ── RESET AND BASE ───────────────────────────────────────────────── */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background-color: #f5f5f7;
+            color: #1a1a2e;
+        }
+
+        /* ── NAVBAR ───────────────────────────────────────────────────────── */
+        /* Fixed top navigation bar that stays visible as you scroll */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: white;
+            border-bottom: 1px solid #ebebf0;
+            padding: 0 32px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .navbar-brand {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1a1a2e;
+            letter-spacing: -0.3px;
+        }
+
+        .navbar-brand span {
+            font-weight: 400;
+            color: #6b6b8a;
+            margin-left: 6px;
+            font-size: 13px;
+        }
+
+        /* The "Upload Another File" button in the navbar */
+        .navbar-btn {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #1a1a2e;
+            color: white;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+
+        .navbar-btn:hover {
+            background: #2d2d5a;
+        }
+
+        /* ── PAGE CONTENT ─────────────────────────────────────────────────── */
+        .page {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 36px 24px 60px;
+        }
+
+        /* ── PAGE HEADER ──────────────────────────────────────────────────── */
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-header .eyebrow {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #6b6b8a;
+            margin-bottom: 8px;
+        }
+
+        .page-header h1 {
+            font-size: 30px;
+            font-weight: 800;
+            color: #1a1a2e;
+            margin-bottom: 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .page-header .meta {
+            font-size: 14px;
+            color: #6b6b8a;
+        }
+
+        .page-header .meta strong {
+            color: #1a1a2e;
+        }
+
+        /* ── SECTION TITLE ────────────────────────────────────────────────── */
+        .section-title {
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            color: #6b6b8a;
+            margin-bottom: 16px;
+            margin-top: 36px;
+        }
+
+        /* ── STAT CARDS GRID ──────────────────────────────────────────────── */
+        /* Responsive grid — 3 columns on desktop, 2 on tablet, 1 on mobile */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        @media (max-width: 700px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 440px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ── STAT CARD ────────────────────────────────────────────────────── */
+        .stat-card {
+            background: white;
+            border-radius: 14px;
+            padding: 22px 24px;
+            box-shadow: 0 1px 8px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid transparent;
+            /* Smooth transition for the hover lift effect */
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Lift the card slightly when hovered */
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Each card gets a different left border colour for visual variety */
+        .stat-card.c1 { border-left-color: #1a1a2e; }
+        .stat-card.c2 { border-left-color: #4a4a8a; }
+        .stat-card.c3 { border-left-color: #7a7aaa; }
+        .stat-card.c4 { border-left-color: #2d6a4f; }
+        .stat-card.c5 { border-left-color: #e76f51; }
+        .stat-card.c6 { border-left-color: #457b9d; }
+
+        .stat-label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #6b6b8a;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 34px;
+            font-weight: 800;
+            color: #1a1a2e;
+            line-height: 1;
+            margin-bottom: 4px;
+            letter-spacing: -1px;
+        }
+
+        .stat-desc {
+            font-size: 12px;
+            color: #aaaaaa;
+        }
+
+        /* ── WIDE CARD ────────────────────────────────────────────────────── */
+        /* Full-width cards for charts and tables */
+        .wide-card {
+            background: white;
+            border-radius: 14px;
+            padding: 28px;
+            box-shadow: 0 1px 8px rgba(0, 0, 0, 0.05);
+            margin-bottom: 16px;
+        }
+
+        .wide-card h2 {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 6px;
+        }
+
+        .wide-card .card-meta {
+            font-size: 12px;
+            color: #aaaaaa;
+            margin-bottom: 24px;
+        }
+
+        /* ── TWO COLUMN LAYOUT FOR CHARTS ─────────────────────────────────── */
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        @media (max-width: 640px) {
+            .two-col {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ── CHART CONTAINERS ─────────────────────────────────────────────── */
+        /* Setting a fixed height prevents Chart.js from making charts too tall */
+        .chart-container {
+            position: relative;
+            height: 260px;
+        }
+
+        .chart-container-sm {
+            position: relative;
+            height: 220px;
+        }
+
+        /* ── TOP CONTRIBUTORS TABLE ───────────────────────────────────────── */
+        .contributor-row {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f5;
+        }
+
+        .contributor-row:last-child {
+            border-bottom: none;
+        }
+
+        .rank {
+            font-size: 12px;
+            font-weight: 700;
+            color: #ccccdd;
+            width: 28px;
+            flex-shrink: 0;
+        }
+
+        /* Highlight the top contributor's rank number */
+        .rank.top {
+            color: #1a1a2e;
+        }
+
+        .contributor-name {
+            flex: 1;
+            font-size: 14px;
+            color: #1a1a2e;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-right: 16px;
+        }
+
+        .contributor-bar-wrap {
+            width: 35%;
+            background: #f0f0f5;
+            border-radius: 99px;
+            height: 6px;
+            flex-shrink: 0;
+        }
+
+        .contributor-bar-fill {
+            height: 100%;
+            background: #1a1a2e;
+            border-radius: 99px;
+            /* Animate the bar growing in on page load */
+            animation: grow 0.6s ease forwards;
+            transform-origin: left;
+        }
+
+        @keyframes grow {
+            from { transform: scaleX(0); }
+            to   { transform: scaleX(1); }
+        }
+
+        .contributor-count {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1a1a2e;
+            width: 44px;
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        /* ── DATE RANGE BADGE ─────────────────────────────────────────────── */
+        .badge {
+            display: inline-block;
+            background: #f0f0f5;
+            color: #6b6b8a;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 99px;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+
+        /* ── RESPONSIVE NAVBAR ────────────────────────────────────────────── */
+        @media (max-width: 480px) {
+            .navbar {
+                padding: 0 16px;
+            }
+            .navbar-brand span {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="navbar-brand">
+            WhatsApp Note Extractor
+            <span>IEEE CS x GCE AI/ML Track</span>
+        </div>
+        <a href="/" class="navbar-btn">Upload Another File</a>
+    </nav>
+
+    <div class="page">
+
+        <!-- PAGE HEADER -->
+        <div class="page-header">
+            <div class="eyebrow">Chat Dashboard</div>
+            <h1>
+                Chat Analysis
+                <!-- Date range badge — shows first and last message dates -->
+                {% if stats.date_range %}
+                <span class="badge">{{ stats.date_range }}</span>
+                {% endif %}
+            </h1>
+            <p class="meta">
+                <strong>{{ stats.total_messages }}</strong> messages &nbsp;·&nbsp;
+                <strong>{{ stats.unique_members }}</strong> members &nbsp;·&nbsp;
+                <strong>{{ stats.active_days }}</strong> active days
+            </p>
+        </div>
+
+        <!-- STAT CARDS -->
+        <p class="section-title">Overview</p>
+        <div class="stats-grid">
+
+            <div class="stat-card c1">
+                <div class="stat-label">Total Messages</div>
+                <div class="stat-value">{{ stats.total_messages }}</div>
+                <div class="stat-desc">excluding system messages</div>
+            </div>
+
+            <div class="stat-card c2">
+                <div class="stat-label">Members</div>
+                <div class="stat-value">{{ stats.unique_members }}</div>
+                <div class="stat-desc">unique senders</div>
+            </div>
+
+            <div class="stat-card c3">
+                <div class="stat-label">Active Days</div>
+                <div class="stat-value">{{ stats.active_days }}</div>
+                <div class="stat-desc">days with messages</div>
+            </div>
+
+            <div class="stat-card c4">
+                <div class="stat-label">Most Active Day</div>
+                <div class="stat-value" style="font-size: 24px; letter-spacing: -0.5px;">
+                    {{ stats.most_active_day }}
+                </div>
+                <div class="stat-desc">busiest day of the week</div>
+            </div>
+
+            <div class="stat-card c5">
+                <div class="stat-label">Most Active Hour</div>
+                <div class="stat-value">{{ stats.most_active_hour }}:00</div>
+                <div class="stat-desc">24-hour time</div>
+            </div>
+
+            <div class="stat-card c6">
+                <div class="stat-label">Media Messages</div>
+                <div class="stat-value">{{ stats.media_ratio.media_count }}</div>
+                <div class="stat-desc">{{ stats.media_ratio.media_percent }}% of all messages</div>
+            </div>
+
+        </div>
+
+        <!-- CHARTS ROW -->
+        <p class="section-title">Activity</p>
+        <div class="two-col">
+
+            <!-- HOURLY ACTIVITY CHART -->
+            <div class="wide-card">
+                <h2>Activity by Hour</h2>
+                <p class="card-meta">Number of messages sent each hour of the day</p>
+                <div class="chart-container">
+                    <canvas id="hourChart"></canvas>
+                </div>
+            </div>
+
+            <!-- MEDIA VS TEXT DONUT CHART -->
+            <div class="wide-card">
+                <h2>Message Types</h2>
+                <p class="card-meta">Breakdown of media vs text messages</p>
+                <div class="chart-container">
+                    <canvas id="donutChart"></canvas>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- TOP CONTRIBUTORS -->
+        <p class="section-title">Top Contributors</p>
+        <div class="wide-card">
+            <h2>Most Active Members</h2>
+            <p class="card-meta">Ranked by total message count</p>
+
+            {% set max_count = stats.top_contributors[0][1] %}
+            {% for sender, count in stats.top_contributors %}
+            <div class="contributor-row">
+                <div class="rank {% if loop.index == 1 %}top{% endif %}">
+                    {{ loop.index }}
+                </div>
+                <div class="contributor-name">{{ sender }}</div>
+                <div class="contributor-bar-wrap">
+                    <div
+                        class="contributor-bar-fill"
+                        style="width: {{ (count / max_count * 100) | round }}%"
+                    ></div>
+                </div>
+                <div class="contributor-count">{{ count }}</div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- MOST USED WORDS -->
+        <p class="section-title">Most Used Words</p>
+        <div class="wide-card">
+            <h2>Top 10 Words</h2>
+            <p class="card-meta">Most frequently used words excluding common filler words</p>
+
+            <!--
+                stats.most_used_words is a list of (word, count) tuples.
+                We display each word as a pill with the count next to it.
+                The pill size reflects the word's frequency relative to
+                the most common word.
+            -->
+            {% set max_word_count = stats.most_used_words[0][1] %}
+            <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px;">
+                {% for word, count in stats.most_used_words %}
+                <div style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    background: #f5f5f7;
+                    border-radius: 99px;
+                    padding: 8px 16px;
+                    transition: transform 0.15s ease, box-shadow 0.15s ease;
+                " onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)'"
+                   onmouseout="this.style.transform='';this.style.boxShadow=''">
+                    <span style="
+                        font-size: {{ 13 + ((count / max_word_count) * 6) | round | int }}px;
+                        font-weight: 700;
+                        color: #1a1a2e;
+                    ">{{ word }}</span>
+                    <span style="
+                        font-size: 11px;
+                        font-weight: 600;
+                        color: #aaaaaa;
+                        background: white;
+                        padding: 2px 7px;
+                        border-radius: 99px;
+                    ">{{ count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+
+    <!--
+        CHART.JS SCRIPTS
+        We pass the Python data from Flask into JavaScript using Jinja2 templating.
+        The | tojson filter converts Python dicts and lists into valid JSON strings
+        that JavaScript can read directly.
+    -->
+    <script>
+        // ── HOURLY ACTIVITY BAR CHART ────────────────────────────────────────
+        // Build arrays of labels (0-23) and data values for each hour.
+        // The hour_distribution dict from Python may not have all 24 hours,
+        // so we default to 0 for any missing hour.
+
+        const hourDist = {{ stats.hour_distribution | tojson }};
+        const hourLabels = Array.from({length: 24}, (_, i) => i + ':00');
+        const hourData = Array.from({length: 24}, (_, i) => hourDist[i] || 0);
+        const mostActiveHour = {{ stats.most_active_hour }};
+
+        // Colour each bar — the most active hour gets a darker colour
+        const hourColors = hourData.map((_, i) =>
+            i === mostActiveHour ? '#1a1a2e' : '#e0e0ea'
+        );
+
+        new Chart(document.getElementById('hourChart'), {
+            type: 'bar',
+            data: {
+                labels: hourLabels,
+                datasets: [{
+                    data: hourData,
+                    backgroundColor: hourColors,
+                    borderRadius: 4,
+                    borderSkipped: false,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            // Custom tooltip: show "212 messages" instead of just "212"
+                            label: ctx => ` ${ctx.raw} messages`
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: {
+                            // Only show labels for every 6 hours to avoid crowding
+                            callback: (val, i) => i % 6 === 0 ? hourLabels[i] : ''
+                        }
+                    },
+                    y: {
+                        grid: { color: '#f0f0f5' },
+                        ticks: { precision: 0 }
+                    }
+                }
+            }
+        });
+
+        // ── MEDIA VS TEXT DONUT CHART ─────────────────────────────────────────
+        new Chart(document.getElementById('donutChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Media', 'Text'],
+                datasets: [{
+                    data: [
+                        {{ stats.media_ratio.media_count }},
+                        {{ stats.media_ratio.text_count }}
+                    ],
+                    backgroundColor: ['#1a1a2e', '#e0e0ea'],
+                    borderWidth: 0,
+                    hoverOffset: 6,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            font: { size: 13 }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => ` ${ctx.raw} messages (${
+                                Math.round(ctx.raw / ({{ stats.media_ratio.media_count }} + {{ stats.media_ratio.text_count }}) * 100)
+                            }%)`
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>
