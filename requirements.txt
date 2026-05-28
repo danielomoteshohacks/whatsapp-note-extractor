@@ -4,3 +4,4 @@ flask
 azure-ai-textanalytics
 azure-search-documents
 openai
+google-genai

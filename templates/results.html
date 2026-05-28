@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ filter_name }} — Results</title>
+    <style>
+        /* ── RESET AND BASE ───────────────────────────────────────────────── */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background-color: #f5f5f7;
+            color: #1a1a2e;
+        }
+
+        /* ── NAVBAR ───────────────────────────────────────────────────────── */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: white;
+            border-bottom: 1px solid #ebebf0;
+            padding: 0 32px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .navbar-brand {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        .navbar-brand span {
+            font-weight: 400;
+            color: #6b6b8a;
+            margin-left: 6px;
+            font-size: 13px;
+        }
+
+        .navbar-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+
+        .btn-primary {
+            background: #1a1a2e;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2d2d5a;
+        }
+
+        .btn-secondary {
+            background: #f0f0f5;
+            color: #1a1a2e;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0ea;
+        }
+
+        /* ── PAGE CONTENT ─────────────────────────────────────────────────── */
+        .page {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 36px 24px 60px;
+        }
+
+        /* ── PAGE HEADER ──────────────────────────────────────────────────── */
+        .page-header {
+            margin-bottom: 28px;
+        }
+
+        .page-header .eyebrow {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #6b6b8a;
+            margin-bottom: 8px;
+        }
+
+        .page-header h1 {
+            font-size: 26px;
+            font-weight: 800;
+            color: #1a1a2e;
+            margin-bottom: 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .page-header .meta {
+            font-size: 14px;
+            color: #6b6b8a;
+        }
+
+        /* ── FILTER PILLS ─────────────────────────────────────────────────── */
+        /* The five filter buttons shown at the top of the results page
+           so the user can switch between filters without going back */
+        .filter-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 28px;
+        }
+
+        .pill {
+            display: inline-block;
+            padding: 7px 14px;
+            border-radius: 99px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            background: #f0f0f5;
+            color: #6b6b8a;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .pill:hover {
+            background: #e0e0ea;
+            color: #1a1a2e;
+        }
+
+        /* The currently active filter pill */
+        .pill.active {
+            background: #1a1a2e;
+            color: white;
+        }
+
+        /* ── EMPTY STATE ──────────────────────────────────────────────────── */
+        /* Shown when a filter returns no results */
+        .empty {
+            background: white;
+            border-radius: 14px;
+            padding: 48px;
+            text-align: center;
+            box-shadow: 0 1px 8px rgba(0,0,0,0.05);
+        }
+
+        .empty h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 8px;
+        }
+
+        .empty p {
+            font-size: 14px;
+            color: #aaaaaa;
+        }
+
+        /* ── MESSAGE CARD ─────────────────────────────────────────────────── */
+        /* Each matched message is displayed as a card */
+        .message-card {
+            background: white;
+            border-radius: 14px;
+            padding: 20px 24px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 8px rgba(0,0,0,0.05);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .message-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.09);
+        }
+
+        /* ── MESSAGE HEADER ───────────────────────────────────────────────── */
+        /* Sender name and timestamp on the same line */
+        .message-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .sender {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1a1a2e;
+        }
+
+        .timestamp {
+            font-size: 11px;
+            color: #aaaaaa;
+            font-weight: 500;
+        }
+
+        /* ── MESSAGE CONTENT ──────────────────────────────────────────────── */
+        .message-content {
+            font-size: 14px;
+            color: #2c2c2c;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        /* ── ENTITY TAGS ──────────────────────────────────────────────────── */
+        /* Small tags below the message showing detected entities */
+        .entity-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 12px;
+        }
+
+        .entity-tag {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 99px;
+            background: #f0f0f5;
+            color: #6b6b8a;
+        }
+
+        /* Different colours for different entity categories */
+        .entity-tag.DateTime { background: #fff3e0; color: #e65100; }
+        .entity-tag.URL { background: #e3f2fd; color: #1565c0; }
+        .entity-tag.PhoneNumber { background: #e8f5e9; color: #2e7d32; }
+        .entity-tag.Person { background: #f3e5f5; color: #6a1b9a; }
+        .entity-tag.Organization { background: #e0f7fa; color: #006064; }
+        .entity-tag.Location { background: #fce4ec; color: #880e4f; }
+
+        /* ── KEY PHRASES ──────────────────────────────────────────────────── */
+        .key-phrases {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .key-phrase {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 99px;
+            background: #f5f5f7;
+            color: #aaaaaa;
+            font-style: italic;
+        }
+
+        /* ── RESPONSIVE ───────────────────────────────────────────────────── */
+        @media (max-width: 480px) {
+            .navbar { padding: 0 16px; }
+            .navbar-brand span { display: none; }
+            .filter-pills { gap: 6px; }
+            .pill { font-size: 12px; padding: 6px 12px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="navbar-brand">
+            WhatsApp Note Extractor
+            <span>IEEE CS x GCE AI/ML Track</span>
+        </div>
+        <div class="navbar-actions">
+            <a href="/" class="btn btn-secondary">Dashboard</a>
+            <a href="/" class="btn btn-primary">Upload Another File</a>
+        </div>
+    </nav>
+
+    <div class="page">
+
+        <!-- PAGE HEADER -->
+        <div class="page-header">
+            <div class="eyebrow">Filtered Results</div>
+            <h1>{{ filter_name }}</h1>
+            <p class="meta">
+                <strong>{{ total }}</strong> message{{ 's' if total != 1 else '' }} found
+            </p>
+        </div>
+
+        <!--
+            FILTER PILLS
+            Quick links to switch between all five filters.
+            The currently active filter is highlighted.
+        -->
+        <div class="filter-pills">
+            <a href="/filter/links"
+               class="pill {% if filter_name == 'Links' %}active{% endif %}">
+               Links
+            </a>
+            <a href="/filter/deadlines"
+               class="pill {% if filter_name == 'Deadlines' %}active{% endif %}">
+               Deadlines
+            </a>
+            <a href="/filter/announcements"
+               class="pill {% if filter_name == 'Announcements' %}active{% endif %}">
+               Announcements
+            </a>
+            <a href="/filter/questions"
+               class="pill {% if filter_name == 'Questions' %}active{% endif %}">
+               Questions
+            </a>
+            <a href="/filter/media"
+               class="pill {% if filter_name == 'Files &amp; Media' %}active{% endif %}">
+               Files &amp; Media
+            </a>
+        </div>
+
+        <!--
+            RESULTS
+            If no messages matched the filter, show the empty state.
+            Otherwise show each message as a card.
+        -->
+        {% if messages %}
+            {% for m in messages %}
+            <div class="message-card">
+
+                <!-- Sender name and timestamp -->
+                <div class="message-header">
+                    <div class="sender">{{ m.sender }}</div>
+                    <div class="timestamp">
+                        {% if m.timestamp %}
+                            {{ m.timestamp.strftime('%d %b %Y, %I:%M %p') }}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Message content -->
+                <div class="message-content">{{ m.content }}</div>
+
+                <!--
+                    Entity tags — show detected entities below the message.
+                    Each entity gets a colour-coded tag based on its category.
+                    Only show entities that have a colour defined in the CSS.
+                -->
+                {% set shown_categories = ['DateTime', 'URL', 'PhoneNumber', 'Person', 'Organization', 'Location'] %}
+                {% if m.entities %}
+                <div class="entity-tags">
+                    {% for entity in m.entities %}
+                    {% if entity.category in shown_categories %}
+                    <span class="entity-tag {{ entity.category }}">
+                        {{ entity.category }}: {{ entity.text }}
+                    </span>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!--
+                    Key phrases — shown as subtle italic tags below the entities.
+                    Limited to 5 phrases to avoid cluttering the card.
+                -->
+                {% if m.key_phrases %}
+                <div class="key-phrases">
+                    {% for phrase in m.key_phrases[:5] %}
+                    <span class="key-phrase">{{ phrase }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+            </div>
+            {% endfor %}
+
+        {% else %}
+            <!-- Empty state — no messages matched this filter -->
+            <div class="empty">
+                <h2>No results found</h2>
+                <p>No messages matched the {{ filter_name }} filter in this chat.</p>
+            </div>
+        {% endif %}
+
+    </div>
+
+</body>
+</html>
