@@ -13,6 +13,8 @@ import os
 from flask import Flask, render_template, request, redirect, url_for
 from parser.whatsapp_parser import parse_export, extract_whatsapp_zip
 from dashboard.stats import compute_stats
+from ai.entity_extractor import extract_entities, entity_summary
+
 
 # Create the Flask application instance.
 # __name__ tells Flask where to look for templates and static files —
@@ -74,13 +76,15 @@ def upload():
 
     # Parse the extracted .txt file into a list of Message objects
     messages = parse_export(txt_path)
+    messages = extract_entities(messages)
+    summary = entity_summary(messages)
 
     # Compute all statistics from the parsed messages
     stats = compute_stats(messages)
 
     # Render the dashboard template, passing the stats dictionary to it.
     # The template can access any key from the stats dict directly by name.
-    return render_template("dashboard.html", stats=stats)
+    return render_template("dashboard.html", stats=stats, entity_summary=summary)
 
 
 # ─── RUN THE APP ──────────────────────────────────────────────────────────────

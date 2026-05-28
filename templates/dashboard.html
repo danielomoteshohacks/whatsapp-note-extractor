@@ -448,6 +448,47 @@
             {% endfor %}
         </div>
 
+        <!-- ENTITY SUMMARY -->
+        <p class="section-title">Entities Detected</p>
+        <div class="wide-card">
+            <h2>What Azure AI Found</h2>
+            <p class="card-meta">Named entities automatically extracted from messages by Azure AI Language</p>
+
+            <!--
+                entity_summary is a dictionary mapping entity category names
+                to their counts. For example: {"DateTime": 312, "URL": 47}
+                We display each category as a pill with its count.
+            -->
+            {% if entity_summary %}
+            <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px;">
+                {% for category, count in entity_summary.items() %}
+                <div style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    background: #f0f0f5;
+                    border-radius: 99px;
+                    padding: 8px 16px;
+                    transition: transform 0.15s ease, box-shadow 0.15s ease;
+                " onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)'"
+                   onmouseout="this.style.transform='';this.style.boxShadow=''">
+                    <span style="font-size: 13px; font-weight: 700; color: #1a1a2e;">{{ category }}</span>
+                    <span style="
+                        font-size: 11px;
+                        font-weight: 600;
+                        color: #aaaaaa;
+                        background: white;
+                        padding: 2px 7px;
+                        border-radius: 99px;
+                    ">{{ count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p style="color: #aaaaaa; font-size: 13px;">No entities detected.</p>
+            {% endif %}
+        </div>
+
         <!-- MOST USED WORDS -->
         <p class="section-title">Most Used Words</p>
         <div class="wide-card">
