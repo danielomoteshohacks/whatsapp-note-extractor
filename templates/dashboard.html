@@ -4,604 +4,390 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Dashboard</title>
-
-    <!-- Chart.js from CDN — gives us professional animated charts -->
+    <script>if (localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark');</script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-
     <style>
-        /* ── RESET AND BASE ───────────────────────────────────────────────── */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --bg: #f6f7f9; --bg-secondary: #eef0f3; --surface: #ffffff; --surface-hover: #f9fafb;
+            --border: #e2e5ea; --border-hover: #c5cad3; --text-primary: #0d1117; --text-secondary: #57606a;
+            --text-tertiary: #8b949e; --accent: #1a1a2e; --accent-hover: #2d2d5a; --accent-text: #ffffff;
+            --destructive: #cf222e; --success: #1a7f37;
+            --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px;
+            --shadow-xs: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.04);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,0.10), 0 4px 12px rgba(0,0,0,0.06);
+            --transition: 0.16s ease;
         }
-
+        [data-theme="dark"] {
+            --bg: #0d0d14; --bg-secondary: #111118; --surface: #16161f; --surface-hover: #1e1e2a;
+            --border: #2a2a3a; --border-hover: #3d3d52; --text-primary: #e6edf3; --text-secondary: #8b949e;
+            --text-tertiary: #484f58; --accent: #6366f1; --accent-hover: #818cf8; --accent-text: #ffffff;
+            --destructive: #f85149; --success: #3fb950;
+            --shadow-xs: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.35), 0 1px 3px rgba(0,0,0,0.25);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.4), 0 2px 6px rgba(0,0,0,0.3);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.35);
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            background-color: #f5f5f7;
-            color: #1a1a2e;
+            background: var(--bg); color: var(--text-primary);
+            transition: background var(--transition), color var(--transition);
         }
-
-        /* ── NAVBAR ───────────────────────────────────────────────────────── */
-        /* Fixed top navigation bar that stays visible as you scroll */
         .navbar {
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            background: white;
-            border-bottom: 1px solid #ebebf0;
-            padding: 0 32px;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            position: sticky; top: 0; z-index: 100; background: var(--surface);
+            border-bottom: 1px solid var(--border); padding: 0 32px; height: 58px;
+            display: flex; align-items: center; justify-content: space-between;
+            transition: background var(--transition), border-color var(--transition);
         }
-
-        .navbar-brand {
-            font-size: 15px;
-            font-weight: 700;
-            color: #1a1a2e;
-            letter-spacing: -0.3px;
+        .navbar-brand { display: flex; align-items: center; gap: 12px; }
+        .brand-mark {
+            width: 34px; height: 34px; background: var(--accent); color: var(--accent-text);
+            border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 700; letter-spacing: 0.5px; flex-shrink: 0;
+            transition: background var(--transition);
         }
-
-        .navbar-brand span {
-            font-weight: 400;
-            color: #6b6b8a;
-            margin-left: 6px;
-            font-size: 13px;
+        .brand-name { font-size: 14px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.3px; line-height: 1.2; }
+        .brand-sub { font-size: 11px; color: var(--text-tertiary); letter-spacing: 0.2px; line-height: 1; }
+        .navbar-actions { display: flex; align-items: center; gap: 8px; }
+        .theme-toggle {
+            width: 34px; height: 34px; border: 1px solid var(--border); background: transparent;
+            border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: center;
+            justify-content: center; font-size: 14px; color: var(--text-secondary);
+            transition: all var(--transition);
         }
-
-        /* The "Upload Another File" button in the navbar */
-        .navbar-btn {
-            display: inline-block;
-            padding: 8px 16px;
-            background: #1a1a2e;
-            color: white;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 600;
-            text-decoration: none;
-            transition: background 0.2s;
+        .theme-toggle:hover { background: var(--bg-secondary); border-color: var(--border-hover); color: var(--text-primary); }
+        .btn {
+            display: inline-flex; align-items: center; gap: 6px; padding: 0 14px; height: 34px;
+            border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; text-decoration: none;
+            cursor: pointer; border: 1px solid transparent; transition: all var(--transition); letter-spacing: -0.1px;
         }
-
-        .navbar-btn:hover {
-            background: #2d2d5a;
+        .btn-primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+        .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+        .btn-secondary { background: var(--surface); color: var(--text-primary); border-color: var(--border); }
+        .btn-secondary:hover { background: var(--bg-secondary); border-color: var(--border-hover); }
+        .page { max-width: 980px; margin: 0 auto; padding: 36px 24px 80px; }
+        .page-header { margin-bottom: 32px; }
+        .eyebrow {
+            font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+            color: var(--text-tertiary); margin-bottom: 8px;
         }
-
-        /* ── PAGE CONTENT ─────────────────────────────────────────────────── */
-        .page {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 36px 24px 60px;
+        .page-header h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; color: var(--text-primary); margin-bottom: 6px; line-height: 1.2; }
+        .page-meta { font-size: 14px; color: var(--text-secondary); }
+        .page-meta strong { color: var(--text-primary); font-weight: 700; }
+        .date-badge {
+            display: inline-block; background: var(--bg-secondary); border: 1px solid var(--border);
+            border-radius: 99px; padding: 3px 10px; font-size: 12px; font-weight: 600;
+            color: var(--text-secondary); margin-left: 10px; vertical-align: middle;
         }
-
-        /* ── PAGE HEADER ──────────────────────────────────────────────────── */
-        .page-header {
-            margin-bottom: 32px;
-        }
-
-        .page-header .eyebrow {
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            color: #6b6b8a;
-            margin-bottom: 8px;
-        }
-
-        .page-header h1 {
-            font-size: 30px;
-            font-weight: 800;
-            color: #1a1a2e;
-            margin-bottom: 6px;
-            letter-spacing: -0.5px;
-        }
-
-        .page-header .meta {
-            font-size: 14px;
-            color: #6b6b8a;
-        }
-
-        .page-header .meta strong {
-            color: #1a1a2e;
-        }
-
-        /* ── SECTION TITLE ────────────────────────────────────────────────── */
         .section-title {
-            font-size: 13px;
-            font-weight: 700;
-            letter-spacing: 0.8px;
-            text-transform: uppercase;
-            color: #6b6b8a;
-            margin-bottom: 16px;
-            margin-top: 36px;
+            font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+            color: var(--text-tertiary); margin-bottom: 14px; margin-top: 32px;
         }
-
-        /* ── STAT CARDS GRID ──────────────────────────────────────────────── */
-        /* Responsive grid — 3 columns on desktop, 2 on tablet, 1 on mobile */
+        .filter-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+        .pill {
+            display: inline-flex; align-items: center; padding: 8px 16px; border-radius: 99px;
+            font-size: 13px; font-weight: 600; border: 1px solid var(--border); background: var(--surface);
+            color: var(--text-secondary); text-decoration: none; transition: all var(--transition); cursor: pointer;
+        }
+        .pill:hover {
+            background: var(--accent); color: var(--accent-text); border-color: var(--accent);
+            transform: translateY(-1px); box-shadow: var(--shadow-sm);
+        }
+        .search-card {
+            background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+            padding: 24px; box-shadow: var(--shadow-xs);
+            transition: background var(--transition), border-color var(--transition);
+        }
+        .search-card-title { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+        .search-card-sub { font-size: 12px; color: var(--text-tertiary); margin-bottom: 16px; }
+        .search-input {
+            width: 100%; padding: 0 16px; height: 42px; border: 1px solid var(--border);
+            border-radius: var(--radius-sm); font-size: 14px; background: var(--surface);
+            color: var(--text-primary); outline: none; transition: all var(--transition);
+            font-family: inherit;
+        }
+        .search-input::placeholder { color: var(--text-tertiary); }
+        .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(26,26,46,0.08); }
+        [data-theme="dark"] .search-input:focus { box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
+        .search-submit {
+            margin-top: 10px; width: 100%; height: 40px; background: var(--accent); color: var(--accent-text);
+            border: 1px solid var(--accent); border-radius: var(--radius-sm); font-size: 13px;
+            font-weight: 600; cursor: pointer; transition: all var(--transition); font-family: inherit;
+        }
+        .search-submit:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
         .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
         }
-
-        @media (max-width: 700px) {
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 440px) {
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* ── STAT CARD ────────────────────────────────────────────────────── */
         .stat-card {
-            background: white;
-            border-radius: 14px;
-            padding: 22px 24px;
-            box-shadow: 0 1px 8px rgba(0, 0, 0, 0.05);
-            border-left: 4px solid transparent;
-            /* Smooth transition for the hover lift effect */
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
-            position: relative;
-            overflow: hidden;
+            background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+            padding: 20px 22px 20px 26px; box-shadow: var(--shadow-xs); position: relative; overflow: hidden;
+            transition: all var(--transition);
         }
-
-        /* Lift the card slightly when hovered */
-        .stat-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--border-hover); }
+        .stat-card::before {
+            content: ''; position: absolute; left: 0; top: 20%; height: 60%; width: 3px; border-radius: 99px;
         }
-
-        /* Each card gets a different left border colour for visual variety */
-        .stat-card.c1 { border-left-color: #1a1a2e; }
-        .stat-card.c2 { border-left-color: #4a4a8a; }
-        .stat-card.c3 { border-left-color: #7a7aaa; }
-        .stat-card.c4 { border-left-color: #2d6a4f; }
-        .stat-card.c5 { border-left-color: #e76f51; }
-        .stat-card.c6 { border-left-color: #457b9d; }
-
+        .stat-card.c1::before { background: #6366f1; }
+        .stat-card.c2::before { background: #0ea5e9; }
+        .stat-card.c3::before { background: #10b981; }
+        .stat-card.c4::before { background: #f59e0b; }
+        .stat-card.c5::before { background: #ef4444; }
+        .stat-card.c6::before { background: #8b5cf6; }
         .stat-label {
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            color: #6b6b8a;
-            margin-bottom: 8px;
+            font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+            color: var(--text-tertiary); margin-bottom: 8px;
         }
-
-        .stat-value {
-            font-size: 34px;
-            font-weight: 800;
-            color: #1a1a2e;
-            line-height: 1;
-            margin-bottom: 4px;
-            letter-spacing: -1px;
-        }
-
-        .stat-desc {
-            font-size: 12px;
-            color: #aaaaaa;
-        }
-
-        /* ── WIDE CARD ────────────────────────────────────────────────────── */
-        /* Full-width cards for charts and tables */
+        .stat-value { font-size: 32px; font-weight: 800; letter-spacing: -1px; color: var(--text-primary); line-height: 1; }
+        .stat-desc { font-size: 12px; color: var(--text-tertiary); margin-top: 4px; }
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
         .wide-card {
-            background: white;
-            border-radius: 14px;
-            padding: 28px;
-            box-shadow: 0 1px 8px rgba(0, 0, 0, 0.05);
-            margin-bottom: 16px;
+            background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+            padding: 24px; box-shadow: var(--shadow-xs);
+            transition: background var(--transition), border-color var(--transition);
         }
-
-        .wide-card h2 {
-            font-size: 15px;
-            font-weight: 700;
-            color: #1a1a2e;
-            margin-bottom: 6px;
-        }
-
-        .wide-card .card-meta {
-            font-size: 12px;
-            color: #aaaaaa;
-            margin-bottom: 24px;
-        }
-
-        /* ── TWO COLUMN LAYOUT FOR CHARTS ─────────────────────────────────── */
-        .two-col {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-
-        @media (max-width: 640px) {
-            .two-col {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* ── CHART CONTAINERS ─────────────────────────────────────────────── */
-        /* Setting a fixed height prevents Chart.js from making charts too tall */
-        .chart-container {
-            position: relative;
-            height: 260px;
-        }
-
-        .chart-container-sm {
-            position: relative;
-            height: 220px;
-        }
-
-        /* ── TOP CONTRIBUTORS TABLE ───────────────────────────────────────── */
+        .wide-card-title { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+        .wide-card-meta { font-size: 12px; color: var(--text-tertiary); margin-bottom: 20px; }
+        .chart-container { position: relative; height: 240px; }
         .contributor-row {
-            display: flex;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #f0f0f5;
+            display: flex; align-items: center; padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+            transition: background var(--transition), padding var(--transition), margin var(--transition), border-radius var(--transition);
         }
-
-        .contributor-row:last-child {
-            border-bottom: none;
+        .contributor-row:last-child { border-bottom: none; }
+        .contributor-row:hover {
+            background: var(--bg-secondary); margin: 0 -24px; padding: 10px 24px;
+            border-radius: var(--radius-sm);
         }
-
-        .rank {
-            font-size: 12px;
-            font-weight: 700;
-            color: #ccccdd;
-            width: 28px;
-            flex-shrink: 0;
-        }
-
-        /* Highlight the top contributor's rank number */
-        .rank.top {
-            color: #1a1a2e;
-        }
-
+        .rank { font-size: 12px; font-weight: 700; color: var(--text-tertiary); width: 28px; flex-shrink: 0; }
+        .rank.top { color: var(--text-primary); }
         .contributor-name {
-            flex: 1;
-            font-size: 14px;
-            color: #1a1a2e;
-            font-weight: 500;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            margin-right: 16px;
+            flex: 1; font-size: 14px; font-weight: 500; color: var(--text-primary);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 16px;
         }
-
         .contributor-bar-wrap {
-            width: 35%;
-            background: #f0f0f5;
-            border-radius: 99px;
-            height: 6px;
-            flex-shrink: 0;
+            width: 32%; background: var(--bg-secondary); height: 5px; border-radius: 99px; flex-shrink: 0;
         }
-
         .contributor-bar-fill {
-            height: 100%;
-            background: #1a1a2e;
-            border-radius: 99px;
-            /* Animate the bar growing in on page load */
-            animation: grow 0.6s ease forwards;
-            transform-origin: left;
+            height: 100%; background: var(--accent); border-radius: 99px;
+            animation: grow 0.5s ease forwards; transform-origin: left;
         }
-
-        @keyframes grow {
-            from { transform: scaleX(0); }
-            to   { transform: scaleX(1); }
-        }
-
+        @keyframes grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
         .contributor-count {
-            font-size: 13px;
-            font-weight: 700;
-            color: #1a1a2e;
-            width: 44px;
-            text-align: right;
-            flex-shrink: 0;
+            font-size: 13px; font-weight: 700; color: var(--text-primary); width: 44px; text-align: right; flex-shrink: 0;
         }
-
-        /* ── DATE RANGE BADGE ─────────────────────────────────────────────── */
-        .badge {
-            display: inline-block;
-            background: #f0f0f5;
-            color: #6b6b8a;
-            font-size: 12px;
-            font-weight: 600;
-            padding: 4px 10px;
-            border-radius: 99px;
-            margin-left: 10px;
-            vertical-align: middle;
+        .entity-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+        .entity-pill {
+            display: inline-flex; align-items: center; gap: 8px; background: var(--bg-secondary);
+            border: 1px solid var(--border); border-radius: 99px; padding: 6px 14px;
+            transition: all var(--transition);
         }
-
-        /* ── RESPONSIVE NAVBAR ────────────────────────────────────────────── */
+        .entity-pill:hover { border-color: var(--border-hover); background: var(--surface); transform: translateY(-1px); }
+        .entity-pill-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+        .entity-pill-count {
+            font-size: 11px; font-weight: 700; color: var(--text-tertiary); background: var(--surface);
+            border: 1px solid var(--border); border-radius: 99px; padding: 1px 7px;
+        }
+        .word-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+        .word-pill {
+            display: inline-flex; align-items: center; gap: 8px; background: var(--bg-secondary);
+            border: 1px solid var(--border); border-radius: 99px; padding: 6px 14px;
+            transition: all var(--transition);
+        }
+        .word-pill:hover {
+            background: var(--accent); color: var(--accent-text); border-color: var(--accent);
+            transform: translateY(-2px); box-shadow: var(--shadow-sm);
+        }
+        .word-pill:hover .word-badge { background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.75); border-color: rgba(255,255,255,0.15); }
+        .word-badge {
+            font-size: 11px; font-weight: 700; color: var(--text-tertiary); background: var(--surface);
+            border: 1px solid var(--border); border-radius: 99px; padding: 1px 7px; transition: all var(--transition);
+        }
+        .loading-overlay {
+            display: none; position: fixed; inset: 0; background: var(--surface);
+            z-index: 9999; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .loading-inner { text-align: center; max-width: 380px; padding: 0 24px; }
+        .spinner {
+            width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--accent);
+            border-radius: 50%; animation: spin 0.75s linear infinite; margin: 0 auto 24px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-title { font-size: 18px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.4px; margin-bottom: 8px; }
+        .loading-msg { font-size: 13px; color: var(--text-secondary); margin-bottom: 28px; line-height: 1.5; }
+        .progress-track { width: 100%; background: var(--bg-secondary); border-radius: 99px; height: 6px; overflow: hidden; margin-bottom: 10px; }
+        .progress-fill { height: 100%; background: var(--accent); border-radius: 99px; width: 0%; transition: width 0.4s ease; }
+        .progress-label { font-size: 11px; color: var(--text-tertiary); }
+        @media (max-width: 768px) {
+            .navbar { padding: 0 16px; } .brand-sub { display: none; }
+            .page { padding: 24px 16px 60px; } .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .two-col { grid-template-columns: 1fr; }
+        }
         @media (max-width: 480px) {
-            .navbar {
-                padding: 0 16px;
-            }
-            .navbar-brand span {
-                display: none;
-            }
+            .stats-grid { grid-template-columns: 1fr; }
+            .navbar-brand .brand-name { font-size: 13px; }
+            .filter-pills { gap: 6px; }
+            .pill { font-size: 12px; padding: 6px 12px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- NAVBAR -->
     <nav class="navbar">
         <div class="navbar-brand">
-            WhatsApp Note Extractor
-            <span>IEEE CS x GCE AI/ML Track</span>
+            <div class="brand-mark">NX</div>
+            <div>
+                <div class="brand-name">WhatsApp Note Extractor</div>
+                <div class="brand-sub">IEEE CS x GCE AI/ML Track</div>
+            </div>
         </div>
-        <a href="/" class="navbar-btn">Upload Another File</a>
+        <div class="navbar-actions">
+            <a href="/" class="btn btn-primary">Upload Another File</a>
+            <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+                <span id="theme-icon">⏾</span>
+            </button>
+        </div>
     </nav>
 
     <div class="page">
 
-        <!-- PAGE HEADER -->
         <div class="page-header">
             <div class="eyebrow">Chat Dashboard</div>
             <h1>
                 Chat Analysis
-                <!-- Date range badge — shows first and last message dates -->
                 {% if stats.date_range %}
-                <span class="badge">{{ stats.date_range }}</span>
+                <span class="date-badge">{{ stats.date_range }}</span>
                 {% endif %}
             </h1>
-            <p class="meta">
+            <p class="page-meta">
                 <strong>{{ stats.total_messages }}</strong> messages &nbsp;·&nbsp;
                 <strong>{{ stats.unique_members }}</strong> members &nbsp;·&nbsp;
                 <strong>{{ stats.active_days }}</strong> active days
             </p>
         </div>
 
-        <!-- PRESET FILTERS -->
         <p class="section-title">Quick Filters</p>
-        <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 32px;">
-            <a href="/filter/links" style="
-                display: inline-block;
-                padding: 10px 20px;
-                background: #1a1a2e;
-                color: white;
-                border-radius: 99px;
-                font-size: 13px;
-                font-weight: 600;
-                text-decoration: none;
-                transition: background 0.2s, transform 0.15s;
-            " onmouseover="this.style.transform='translateY(-2px)'"
-               onmouseout="this.style.transform=''">
-                Links
-            </a>
-            <a href="/filter/deadlines" style="
-                display: inline-block;
-                padding: 10px 20px;
-                background: #2d6a4f;
-                color: white;
-                border-radius: 99px;
-                font-size: 13px;
-                font-weight: 600;
-                text-decoration: none;
-                transition: background 0.2s, transform 0.15s;
-            " onmouseover="this.style.transform='translateY(-2px)'"
-               onmouseout="this.style.transform=''">
-                Deadlines
-            </a>
-            <a href="/filter/announcements" style="
-                display: inline-block;
-                padding: 10px 20px;
-                background: #457b9d;
-                color: white;
-                border-radius: 99px;
-                font-size: 13px;
-                font-weight: 600;
-                text-decoration: none;
-                transition: background 0.2s, transform 0.15s;
-            " onmouseover="this.style.transform='translateY(-2px)'"
-               onmouseout="this.style.transform=''">
-                Announcements
-            </a>
-            <a href="/filter/questions" style="
-                display: inline-block;
-                padding: 10px 20px;
-                background: #e76f51;
-                color: white;
-                border-radius: 99px;
-                font-size: 13px;
-                font-weight: 600;
-                text-decoration: none;
-                transition: background 0.2s, transform 0.15s;
-            " onmouseover="this.style.transform='translateY(-2px)'"
-               onmouseout="this.style.transform=''">
-                Questions
-            </a>
-            <a href="/filter/media" style="
-                display: inline-block;
-                padding: 10px 20px;
-                background: #6b6b8a;
-                color: white;
-                border-radius: 99px;
-                font-size: 13px;
-                font-weight: 600;
-                text-decoration: none;
-                transition: background 0.2s, transform 0.15s;
-            " onmouseover="this.style.transform='translateY(-2px)'"
-               onmouseout="this.style.transform=''">
-                Files &amp; Media
-            </a>
+        <div class="filter-pills">
+            <a href="/filter/links" class="pill">Links</a>
+            <a href="/filter/deadlines" class="pill">Deadlines</a>
+            <a href="/filter/announcements" class="pill">Announcements</a>
+            <a href="/filter/questions" class="pill">Questions</a>
+            <a href="/filter/media" class="pill">Files &amp; Media</a>
         </div>
 
-        <!-- STAT CARDS -->
+        <p class="section-title">Intelligence Search</p>
+        <div class="search-card">
+            <div class="search-card-title">Natural Language Search</div>
+            <p class="search-card-sub">Ask anything about this chat in plain English or Pidgin</p>
+            <form action="/search" method="POST">
+                <input
+                    type="text"
+                    name="query"
+                    class="search-input"
+                    placeholder="e.g. show me all deadline messages from the course rep"
+                >
+                <button type="submit" class="search-submit">Search</button>
+            </form>
+        </div>
+
         <p class="section-title">Overview</p>
         <div class="stats-grid">
-
             <div class="stat-card c1">
                 <div class="stat-label">Total Messages</div>
                 <div class="stat-value">{{ stats.total_messages }}</div>
                 <div class="stat-desc">excluding system messages</div>
             </div>
-
             <div class="stat-card c2">
                 <div class="stat-label">Members</div>
                 <div class="stat-value">{{ stats.unique_members }}</div>
                 <div class="stat-desc">unique senders</div>
             </div>
-
             <div class="stat-card c3">
                 <div class="stat-label">Active Days</div>
                 <div class="stat-value">{{ stats.active_days }}</div>
                 <div class="stat-desc">days with messages</div>
             </div>
-
             <div class="stat-card c4">
                 <div class="stat-label">Most Active Day</div>
-                <div class="stat-value" style="font-size: 24px; letter-spacing: -0.5px;">
-                    {{ stats.most_active_day }}
-                </div>
+                <div class="stat-value" style="font-size: 22px; letter-spacing: -0.3px;">{{ stats.most_active_day }}</div>
                 <div class="stat-desc">busiest day of the week</div>
             </div>
-
             <div class="stat-card c5">
                 <div class="stat-label">Most Active Hour</div>
                 <div class="stat-value">{{ stats.most_active_hour }}:00</div>
                 <div class="stat-desc">24-hour time</div>
             </div>
-
             <div class="stat-card c6">
                 <div class="stat-label">Media Messages</div>
                 <div class="stat-value">{{ stats.media_ratio.media_count }}</div>
                 <div class="stat-desc">{{ stats.media_ratio.media_percent }}% of all messages</div>
             </div>
-
         </div>
 
-        <!-- CHARTS ROW -->
         <p class="section-title">Activity</p>
         <div class="two-col">
-
-            <!-- HOURLY ACTIVITY CHART -->
             <div class="wide-card">
-                <h2>Activity by Hour</h2>
-                <p class="card-meta">Number of messages sent each hour of the day</p>
+                <div class="wide-card-title">Activity by Hour</div>
+                <p class="wide-card-meta">Number of messages sent each hour of the day</p>
                 <div class="chart-container">
                     <canvas id="hourChart"></canvas>
                 </div>
             </div>
-
-            <!-- MEDIA VS TEXT DONUT CHART -->
             <div class="wide-card">
-                <h2>Message Types</h2>
-                <p class="card-meta">Breakdown of media vs text messages</p>
+                <div class="wide-card-title">Message Types</div>
+                <p class="wide-card-meta">Breakdown of media vs text messages</p>
                 <div class="chart-container">
                     <canvas id="donutChart"></canvas>
                 </div>
             </div>
-
         </div>
 
-        <!-- TOP CONTRIBUTORS -->
         <p class="section-title">Top Contributors</p>
         <div class="wide-card">
-            <h2>Most Active Members</h2>
-            <p class="card-meta">Ranked by total message count</p>
-
+            <div class="wide-card-title">Most Active Members</div>
+            <p class="wide-card-meta">Ranked by total message count</p>
             {% set max_count = stats.top_contributors[0][1] %}
             {% for sender, count in stats.top_contributors %}
             <div class="contributor-row">
-                <div class="rank {% if loop.index == 1 %}top{% endif %}">
-                    {{ loop.index }}
-                </div>
+                <div class="rank {% if loop.index == 1 %}top{% endif %}">{{ loop.index }}</div>
                 <div class="contributor-name">{{ sender }}</div>
                 <div class="contributor-bar-wrap">
-                    <div
-                        class="contributor-bar-fill"
-                        style="width: {{ (count / max_count * 100) | round }}%"
-                    ></div>
+                    <div class="contributor-bar-fill" style="width: {{ (count / max_count * 100) | round }}%"></div>
                 </div>
                 <div class="contributor-count">{{ count }}</div>
             </div>
             {% endfor %}
         </div>
 
-        <!-- ENTITY SUMMARY -->
         <p class="section-title">Entities Detected</p>
         <div class="wide-card">
-            <h2>What Azure AI Found</h2>
-            <p class="card-meta">Named entities automatically extracted from messages by Azure AI Language</p>
-
-            <!--
-                entity_summary is a dictionary mapping entity category names
-                to their counts. For example: {"DateTime": 312, "URL": 47}
-                We display each category as a pill with its count.
-            -->
+            <div class="wide-card-title">What Azure AI Found</div>
+            <p class="wide-card-meta">Named entities automatically extracted from messages by Azure AI Language</p>
             {% if entity_summary %}
-            <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px;">
+            <div class="entity-pills">
                 {% for category, count in entity_summary.items() %}
-                <div style="
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    background: #f0f0f5;
-                    border-radius: 99px;
-                    padding: 8px 16px;
-                    transition: transform 0.15s ease, box-shadow 0.15s ease;
-                " onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)'"
-                   onmouseout="this.style.transform='';this.style.boxShadow=''">
-                    <span style="font-size: 13px; font-weight: 700; color: #1a1a2e;">{{ category }}</span>
-                    <span style="
-                        font-size: 11px;
-                        font-weight: 600;
-                        color: #aaaaaa;
-                        background: white;
-                        padding: 2px 7px;
-                        border-radius: 99px;
-                    ">{{ count }}</span>
+                <div class="entity-pill">
+                    <span class="entity-pill-name">{{ category }}</span>
+                    <span class="entity-pill-count">{{ count }}</span>
                 </div>
                 {% endfor %}
             </div>
             {% else %}
-            <p style="color: #aaaaaa; font-size: 13px;">No entities detected.</p>
+            <p style="color: var(--text-tertiary); font-size: 13px;">No entities detected.</p>
             {% endif %}
         </div>
 
-        <!-- MOST USED WORDS -->
         <p class="section-title">Most Used Words</p>
         <div class="wide-card">
-            <h2>Top 10 Words</h2>
-            <p class="card-meta">Most frequently used words excluding common filler words</p>
-
-            <!--
-                stats.most_used_words is a list of (word, count) tuples.
-                We display each word as a pill with the count next to it.
-                The pill size reflects the word's frequency relative to
-                the most common word.
-            -->
+            <div class="wide-card-title">Top 10 Words</div>
+            <p class="wide-card-meta">Most frequently used words excluding common filler words</p>
             {% set max_word_count = stats.most_used_words[0][1] %}
-            <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px;">
+            <div class="word-pills">
                 {% for word, count in stats.most_used_words %}
-                <div style="
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    background: #f5f5f7;
-                    border-radius: 99px;
-                    padding: 8px 16px;
-                    transition: transform 0.15s ease, box-shadow 0.15s ease;
-                " onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)'"
-                   onmouseout="this.style.transform='';this.style.boxShadow=''">
-                    <span style="
-                        font-size: {{ 13 + ((count / max_word_count) * 6) | round | int }}px;
-                        font-weight: 700;
-                        color: #1a1a2e;
-                    ">{{ word }}</span>
-                    <span style="
-                        font-size: 11px;
-                        font-weight: 600;
-                        color: #aaaaaa;
-                        background: white;
-                        padding: 2px 7px;
-                        border-radius: 99px;
-                    ">{{ count }}</span>
+                <div class="word-pill">
+                    <span style="font-size: {{ 13 + ((count / max_word_count) * 6) | round | int }}px; font-weight: 700; color: inherit;">{{ word }}</span>
+                    <span class="word-badge">{{ count }}</span>
                 </div>
                 {% endfor %}
             </div>
@@ -609,24 +395,12 @@
 
     </div>
 
-    <!--
-        CHART.JS SCRIPTS
-        We pass the Python data from Flask into JavaScript using Jinja2 templating.
-        The | tojson filter converts Python dicts and lists into valid JSON strings
-        that JavaScript can read directly.
-    -->
     <script>
-        // ── HOURLY ACTIVITY BAR CHART ────────────────────────────────────────
-        // Build arrays of labels (0-23) and data values for each hour.
-        // The hour_distribution dict from Python may not have all 24 hours,
-        // so we default to 0 for any missing hour.
-
         const hourDist = {{ stats.hour_distribution | tojson }};
         const hourLabels = Array.from({length: 24}, (_, i) => i + ':00');
         const hourData = Array.from({length: 24}, (_, i) => hourDist[i] || 0);
         const mostActiveHour = {{ stats.most_active_hour }};
 
-        // Colour each bar — the most active hour gets a darker colour
         const hourColors = hourData.map((_, i) =>
             i === mostActiveHour ? '#1a1a2e' : '#e0e0ea'
         );
@@ -649,7 +423,6 @@
                     legend: { display: false },
                     tooltip: {
                         callbacks: {
-                            // Custom tooltip: show "212 messages" instead of just "212"
                             label: ctx => ` ${ctx.raw} messages`
                         }
                     }
@@ -658,7 +431,6 @@
                     x: {
                         grid: { display: false },
                         ticks: {
-                            // Only show labels for every 6 hours to avoid crowding
                             callback: (val, i) => i % 6 === 0 ? hourLabels[i] : ''
                         }
                     },
@@ -670,7 +442,6 @@
             }
         });
 
-        // ── MEDIA VS TEXT DONUT CHART ─────────────────────────────────────────
         new Chart(document.getElementById('donutChart'), {
             type: 'doughnut',
             data: {
@@ -692,10 +463,7 @@
                 plugins: {
                     legend: {
                         position: 'bottom',
-                        labels: {
-                            padding: 20,
-                            font: { size: 13 }
-                        }
+                        labels: { padding: 20, font: { size: 13 } }
                     },
                     tooltip: {
                         callbacks: {
@@ -706,6 +474,70 @@
                     }
                 }
             }
+        });
+    </script>
+
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-inner">
+            <div class="spinner"></div>
+            <div class="loading-title" id="loading-title">Searching your chat</div>
+            <div class="loading-msg" id="loading-message">Understanding your query...</div>
+            <div class="progress-track">
+                <div class="progress-fill" id="progress-bar"></div>
+            </div>
+            <div class="progress-label" id="progress-label">Starting...</div>
+        </div>
+    </div>
+
+    <script>
+        function updateThemeIcon() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            document.getElementById('theme-icon').textContent = isDark ? '☀' : '⏾';
+        }
+        function toggleTheme() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+            localStorage.setItem('theme', isDark ? 'light' : 'dark');
+            updateThemeIcon();
+        }
+        updateThemeIcon();
+
+        const searchMsgs = [
+            "Understanding your query...",
+            "Identifying relevant messages...",
+            "Reading through the chat...",
+            "Synthesising an answer with Gemini...",
+            "Almost done...",
+        ];
+        const searchSteps = [
+            { progress: 15, label: "Parsing your question..." },
+            { progress: 35, label: "Finding relevant messages..." },
+            { progress: 60, label: "Reading chat context..." },
+            { progress: 80, label: "Gemini is thinking..." },
+            { progress: 95, label: "Putting it all together..." },
+        ];
+        let loadIdx = 0;
+
+        function startLoading(title) {
+            document.getElementById('loading-overlay').style.display = 'flex';
+            document.getElementById('loading-title').textContent = title || 'Loading...';
+            loadIdx = 0;
+            updateLoadStep();
+            setInterval(() => {
+                if (loadIdx < searchSteps.length - 1) { loadIdx++; updateLoadStep(); }
+            }, 2500);
+        }
+        function updateLoadStep() {
+            document.getElementById('progress-bar').style.width = searchSteps[loadIdx].progress + '%';
+            document.getElementById('progress-label').textContent = searchSteps[loadIdx].label;
+            document.getElementById('loading-message').textContent = searchMsgs[loadIdx];
+        }
+        document.querySelector('form[action="/search"]').addEventListener('submit', function () {
+            const q = this.querySelector('input[name="query"]').value.trim();
+            if (q) startLoading('Searching your chat');
+        });
+        document.querySelectorAll('a[href^="/filter/"]').forEach(link => {
+            link.addEventListener('click', () => startLoading('Filtering messages'));
         });
     </script>
 

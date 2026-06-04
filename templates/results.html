@@ -4,263 +4,179 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ filter_name }} — Results</title>
+    <script>if (localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark');</script>
     <style>
-        /* ── RESET AND BASE ───────────────────────────────────────────────── */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --bg: #f6f7f9; --bg-secondary: #eef0f3; --surface: #ffffff; --surface-hover: #f9fafb;
+            --border: #e2e5ea; --border-hover: #c5cad3; --text-primary: #0d1117; --text-secondary: #57606a;
+            --text-tertiary: #8b949e; --accent: #1a1a2e; --accent-hover: #2d2d5a; --accent-text: #ffffff;
+            --destructive: #cf222e; --success: #1a7f37;
+            --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px;
+            --shadow-xs: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.04);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,0.10), 0 4px 12px rgba(0,0,0,0.06);
+            --transition: 0.16s ease;
         }
-
+        [data-theme="dark"] {
+            --bg: #0d0d14; --bg-secondary: #111118; --surface: #16161f; --surface-hover: #1e1e2a;
+            --border: #2a2a3a; --border-hover: #3d3d52; --text-primary: #e6edf3; --text-secondary: #8b949e;
+            --text-tertiary: #484f58; --accent: #6366f1; --accent-hover: #818cf8; --accent-text: #ffffff;
+            --destructive: #f85149; --success: #3fb950;
+            --shadow-xs: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.35), 0 1px 3px rgba(0,0,0,0.25);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.4), 0 2px 6px rgba(0,0,0,0.3);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.35);
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            background-color: #f5f5f7;
-            color: #1a1a2e;
+            background: var(--bg); color: var(--text-primary);
+            transition: background var(--transition), color var(--transition);
         }
-
-        /* ── NAVBAR ───────────────────────────────────────────────────────── */
         .navbar {
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            background: white;
-            border-bottom: 1px solid #ebebf0;
-            padding: 0 32px;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            position: sticky; top: 0; z-index: 100; background: var(--surface);
+            border-bottom: 1px solid var(--border); padding: 0 32px; height: 58px;
+            display: flex; align-items: center; justify-content: space-between;
+            transition: background var(--transition), border-color var(--transition);
         }
-
-        .navbar-brand {
-            font-size: 15px;
-            font-weight: 700;
-            color: #1a1a2e;
+        .navbar-brand { display: flex; align-items: center; gap: 12px; }
+        .brand-mark {
+            width: 34px; height: 34px; background: var(--accent); color: var(--accent-text);
+            border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 700; letter-spacing: 0.5px; flex-shrink: 0;
+            transition: background var(--transition);
         }
-
-        .navbar-brand span {
-            font-weight: 400;
-            color: #6b6b8a;
-            margin-left: 6px;
-            font-size: 13px;
+        .brand-name { font-size: 14px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.3px; line-height: 1.2; }
+        .brand-sub { font-size: 11px; color: var(--text-tertiary); letter-spacing: 0.2px; line-height: 1; }
+        .navbar-actions { display: flex; align-items: center; gap: 8px; }
+        .theme-toggle {
+            width: 34px; height: 34px; border: 1px solid var(--border); background: transparent;
+            border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: center;
+            justify-content: center; font-size: 14px; color: var(--text-secondary);
+            transition: all var(--transition);
         }
-
-        .navbar-actions {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
+        .theme-toggle:hover { background: var(--bg-secondary); border-color: var(--border-hover); color: var(--text-primary); }
         .btn {
-            display: inline-block;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 600;
-            text-decoration: none;
-            transition: background 0.2s;
+            display: inline-flex; align-items: center; gap: 6px; padding: 0 14px; height: 34px;
+            border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; text-decoration: none;
+            cursor: pointer; border: 1px solid transparent; transition: all var(--transition); letter-spacing: -0.1px;
         }
-
-        .btn-primary {
-            background: #1a1a2e;
-            color: white;
+        .btn-primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+        .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+        .btn-secondary { background: var(--surface); color: var(--text-primary); border-color: var(--border); }
+        .btn-secondary:hover { background: var(--bg-secondary); border-color: var(--border-hover); }
+        .page { max-width: 780px; margin: 0 auto; padding: 36px 24px 80px; }
+        .page-header { margin-bottom: 24px; }
+        .eyebrow {
+            font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+            color: var(--text-tertiary); margin-bottom: 8px;
         }
-
-        .btn-primary:hover {
-            background: #2d2d5a;
+        .page-header h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; color: var(--text-primary); margin-bottom: 6px; }
+        .page-meta { font-size: 14px; color: var(--text-secondary); }
+        .page-meta strong { color: var(--text-primary); font-weight: 700; }
+        .ai-box {
+            background: linear-gradient(135deg, #1a1a2e 0%, #2d2d5a 100%);
+            border-radius: var(--radius-xl); padding: 28px 32px;
+            box-shadow: var(--shadow-lg); margin-bottom: 28px;
         }
-
-        .btn-secondary {
-            background: #f0f0f5;
-            color: #1a1a2e;
+        [data-theme="dark"] .ai-box {
+            background: linear-gradient(135deg, #3730a3 0%, #4338ca 100%);
         }
-
-        .btn-secondary:hover {
-            background: #e0e0ea;
+        .ai-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+        .ai-badge {
+            width: 36px; height: 36px; background: rgba(255,255,255,0.15);
+            border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 700; color: white; flex-shrink: 0; letter-spacing: 0.5px;
         }
-
-        /* ── PAGE CONTENT ─────────────────────────────────────────────────── */
-        .page {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 36px 24px 60px;
+        .ai-title { font-size: 15px; font-weight: 700; color: white; letter-spacing: -0.2px; line-height: 1.2; }
+        .ai-sub { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 2px; letter-spacing: 0.3px; }
+        .ai-divider { height: 1px; background: rgba(255,255,255,0.12); margin: 0 0 16px; }
+        .ai-answer {
+            font-size: 14.5px; line-height: 1.85; color: rgba(255,255,255,0.93);
+            letter-spacing: 0.1px; white-space: pre-wrap;
         }
-
-        /* ── PAGE HEADER ──────────────────────────────────────────────────── */
-        .page-header {
-            margin-bottom: 28px;
+        .source-label {
+            font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+            color: var(--text-tertiary); margin-bottom: 14px; margin-top: 4px;
         }
-
-        .page-header .eyebrow {
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            color: #6b6b8a;
-            margin-bottom: 8px;
-        }
-
-        .page-header h1 {
-            font-size: 26px;
-            font-weight: 800;
-            color: #1a1a2e;
-            margin-bottom: 6px;
-            letter-spacing: -0.5px;
-        }
-
-        .page-header .meta {
-            font-size: 14px;
-            color: #6b6b8a;
-        }
-
-        /* ── FILTER PILLS ─────────────────────────────────────────────────── */
-        /* The five filter buttons shown at the top of the results page
-           so the user can switch between filters without going back */
-        .filter-pills {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 28px;
-        }
-
+        .filter-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
         .pill {
-            display: inline-block;
-            padding: 7px 14px;
-            border-radius: 99px;
-            font-size: 13px;
-            font-weight: 600;
-            text-decoration: none;
-            background: #f0f0f5;
-            color: #6b6b8a;
-            transition: background 0.15s, color 0.15s;
+            display: inline-flex; align-items: center; padding: 7px 14px; border-radius: 99px;
+            font-size: 13px; font-weight: 600; text-decoration: none;
+            background: var(--surface); color: var(--text-secondary); border: 1px solid var(--border);
+            transition: all var(--transition);
         }
-
-        .pill:hover {
-            background: #e0e0ea;
-            color: #1a1a2e;
+        .pill:hover { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+        .pill.active { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+        .empty-state {
+            background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+            padding: 48px; text-align: center;
         }
-
-        /* The currently active filter pill */
-        .pill.active {
-            background: #1a1a2e;
-            color: white;
+        .empty-icon {
+            width: 48px; height: 48px; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 20px; color: var(--text-tertiary); margin-bottom: 16px;
         }
-
-        /* ── EMPTY STATE ──────────────────────────────────────────────────── */
-        /* Shown when a filter returns no results */
-        .empty {
-            background: white;
-            border-radius: 14px;
-            padding: 48px;
-            text-align: center;
-            box-shadow: 0 1px 8px rgba(0,0,0,0.05);
-        }
-
-        .empty h2 {
-            font-size: 18px;
-            font-weight: 700;
-            color: #1a1a2e;
-            margin-bottom: 8px;
-        }
-
-        .empty p {
-            font-size: 14px;
-            color: #aaaaaa;
-        }
-
-        /* ── MESSAGE CARD ─────────────────────────────────────────────────── */
-        /* Each matched message is displayed as a card */
+        .empty-state h2 { font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+        .empty-state p { font-size: 14px; color: var(--text-secondary); }
         .message-card {
-            background: white;
-            border-radius: 14px;
-            padding: 20px 24px;
-            margin-bottom: 12px;
-            box-shadow: 0 1px 8px rgba(0,0,0,0.05);
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+            padding: 20px 24px; margin-bottom: 10px; box-shadow: var(--shadow-xs);
+            transition: all var(--transition);
         }
-
-        .message-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.09);
-        }
-
-        /* ── MESSAGE HEADER ───────────────────────────────────────────────── */
-        /* Sender name and timestamp on the same line */
+        .message-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--border-hover); }
         .message-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 10px;
+            display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
         }
-
-        .sender {
-            font-size: 13px;
-            font-weight: 700;
-            color: #1a1a2e;
-        }
-
-        .timestamp {
-            font-size: 11px;
-            color: #aaaaaa;
-            font-weight: 500;
-        }
-
-        /* ── MESSAGE CONTENT ──────────────────────────────────────────────── */
+        .sender { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+        .timestamp { font-size: 11px; color: var(--text-tertiary); font-weight: 500; }
         .message-content {
-            font-size: 14px;
-            color: #2c2c2c;
-            line-height: 1.6;
-            white-space: pre-wrap;
-            word-break: break-word;
+            font-size: 14px; color: var(--text-secondary); line-height: 1.65;
+            white-space: pre-wrap; word-break: break-word;
         }
-
-        /* ── ENTITY TAGS ──────────────────────────────────────────────────── */
-        /* Small tags below the message showing detected entities */
-        .entity-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-top: 12px;
-        }
-
+        .entity-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
         .entity-tag {
-            font-size: 11px;
-            font-weight: 600;
-            padding: 3px 8px;
-            border-radius: 99px;
-            background: #f0f0f5;
-            color: #6b6b8a;
+            font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 99px; border: 1px solid;
         }
-
-        /* Different colours for different entity categories */
-        .entity-tag.DateTime { background: #fff3e0; color: #e65100; }
-        .entity-tag.URL { background: #e3f2fd; color: #1565c0; }
-        .entity-tag.PhoneNumber { background: #e8f5e9; color: #2e7d32; }
-        .entity-tag.Person { background: #f3e5f5; color: #6a1b9a; }
-        .entity-tag.Organization { background: #e0f7fa; color: #006064; }
-        .entity-tag.Location { background: #fce4ec; color: #880e4f; }
-
-        /* ── KEY PHRASES ──────────────────────────────────────────────────── */
-        .key-phrases {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-top: 8px;
-        }
-
+        .entity-tag.DateTime { background: #fff3e0; color: #b45309; border-color: #fed7aa; }
+        .entity-tag.URL { background: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
+        .entity-tag.PhoneNumber { background: #f0fdf4; color: #16a34a; border-color: #bbf7d0; }
+        .entity-tag.Person { background: #faf5ff; color: #7c3aed; border-color: #e9d5ff; }
+        .entity-tag.Organization { background: #ecfeff; color: #0891b2; border-color: #a5f3fc; }
+        .entity-tag.Location { background: #fff1f2; color: #e11d48; border-color: #fecdd3; }
+        [data-theme="dark"] .entity-tag.DateTime { background: #2d1a00; color: #fbbf24; border-color: #78350f; }
+        [data-theme="dark"] .entity-tag.URL { background: #0c1e3d; color: #60a5fa; border-color: #1e3a5f; }
+        [data-theme="dark"] .entity-tag.PhoneNumber { background: #052e16; color: #4ade80; border-color: #14532d; }
+        [data-theme="dark"] .entity-tag.Person { background: #2d1b4e; color: #c084fc; border-color: #4c1d95; }
+        [data-theme="dark"] .entity-tag.Organization { background: #0c2a2d; color: #22d3ee; border-color: #164e63; }
+        [data-theme="dark"] .entity-tag.Location { background: #2d0a0e; color: #fb7185; border-color: #881337; }
+        .key-phrases { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
         .key-phrase {
-            font-size: 11px;
-            padding: 3px 8px;
-            border-radius: 99px;
-            background: #f5f5f7;
-            color: #aaaaaa;
-            font-style: italic;
+            font-size: 11px; padding: 2px 8px; border-radius: 99px; background: var(--bg-secondary);
+            color: var(--text-tertiary); border: 1px solid var(--border); font-style: italic;
         }
-
-        /* ── RESPONSIVE ───────────────────────────────────────────────────── */
+        .loading-overlay {
+            display: none; position: fixed; inset: 0; background: var(--surface);
+            z-index: 9999; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .loading-inner { text-align: center; max-width: 380px; padding: 0 24px; }
+        .spinner {
+            width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--accent);
+            border-radius: 50%; animation: spin 0.75s linear infinite; margin: 0 auto 24px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-title { font-size: 18px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.4px; margin-bottom: 8px; }
+        .loading-msg { font-size: 13px; color: var(--text-secondary); margin-bottom: 28px; line-height: 1.5; }
+        .progress-track { width: 100%; background: var(--bg-secondary); border-radius: 99px; height: 6px; overflow: hidden; margin-bottom: 10px; }
+        .progress-fill { height: 100%; background: var(--accent); border-radius: 99px; width: 0%; transition: width 0.4s ease; }
+        .progress-label { font-size: 11px; color: var(--text-tertiary); }
+        @media (max-width: 768px) {
+            .navbar { padding: 0 16px; } .brand-sub { display: none; }
+            .page { padding: 24px 16px 60px; }
+        }
         @media (max-width: 480px) {
-            .navbar { padding: 0 16px; }
-            .navbar-brand span { display: none; }
+            .navbar-brand .brand-name { font-size: 13px; }
             .filter-pills { gap: 6px; }
             .pill { font-size: 12px; padding: 6px 12px; }
         }
@@ -268,101 +184,84 @@
 </head>
 <body>
 
-    <!-- NAVBAR -->
     <nav class="navbar">
         <div class="navbar-brand">
-            WhatsApp Note Extractor
-            <span>IEEE CS x GCE AI/ML Track</span>
+            <div class="brand-mark">NX</div>
+            <div>
+                <div class="brand-name">WhatsApp Note Extractor</div>
+                <div class="brand-sub">IEEE CS x GCE AI/ML Track</div>
+            </div>
         </div>
         <div class="navbar-actions">
             <a href="/" class="btn btn-secondary">Dashboard</a>
             <a href="/" class="btn btn-primary">Upload Another File</a>
+            <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+                <span id="theme-icon">⏾</span>
+            </button>
         </div>
     </nav>
 
     <div class="page">
 
-        <!-- PAGE HEADER -->
         <div class="page-header">
-            <div class="eyebrow">Filtered Results</div>
+            <div class="eyebrow">Results</div>
             <h1>{{ filter_name }}</h1>
-            <p class="meta">
+            <p class="page-meta">
                 <strong>{{ total }}</strong> message{{ 's' if total != 1 else '' }} found
             </p>
         </div>
 
-        <!--
-            FILTER PILLS
-            Quick links to switch between all five filters.
-            The currently active filter is highlighted.
-        -->
-        <div class="filter-pills">
-            <a href="/filter/links"
-               class="pill {% if filter_name == 'Links' %}active{% endif %}">
-               Links
-            </a>
-            <a href="/filter/deadlines"
-               class="pill {% if filter_name == 'Deadlines' %}active{% endif %}">
-               Deadlines
-            </a>
-            <a href="/filter/announcements"
-               class="pill {% if filter_name == 'Announcements' %}active{% endif %}">
-               Announcements
-            </a>
-            <a href="/filter/questions"
-               class="pill {% if filter_name == 'Questions' %}active{% endif %}">
-               Questions
-            </a>
-            <a href="/filter/media"
-               class="pill {% if filter_name == 'Files &amp; Media' %}active{% endif %}">
-               Files &amp; Media
-            </a>
+        {% if source == "search" and query_summary %}
+        <div class="ai-box">
+            <div class="ai-header">
+                <div class="ai-badge">NX</div>
+                <div>
+                    <div class="ai-title">Chat Intelligence</div>
+                    <div class="ai-sub">AI-powered &nbsp;·&nbsp; {{ total }} source message{{ 's' if total != 1 else '' }}</div>
+                </div>
+            </div>
+            <div class="ai-divider"></div>
+            <div class="ai-answer">{{ query_summary | replace('\n', '<br>') | replace('**', '') | safe }}</div>
         </div>
 
-        <!--
-            RESULTS
-            If no messages matched the filter, show the empty state.
-            Otherwise show each message as a card.
-        -->
+        {% if messages %}
+        <p class="source-label">Source Messages</p>
+        {% endif %}
+        {% endif %}
+
+        <div class="filter-pills">
+            <a href="/filter/links"
+               class="pill {% if filter_name == 'Links' %}active{% endif %}">Links</a>
+            <a href="/filter/deadlines"
+               class="pill {% if filter_name == 'Deadlines' %}active{% endif %}">Deadlines</a>
+            <a href="/filter/announcements"
+               class="pill {% if filter_name == 'Announcements' %}active{% endif %}">Announcements</a>
+            <a href="/filter/questions"
+               class="pill {% if filter_name == 'Questions' %}active{% endif %}">Questions</a>
+            <a href="/filter/media"
+               class="pill {% if filter_name == 'Files &amp; Media' %}active{% endif %}">Files &amp; Media</a>
+        </div>
+
         {% if messages %}
             {% for m in messages %}
             <div class="message-card">
-
-                <!-- Sender name and timestamp -->
                 <div class="message-header">
                     <div class="sender">{{ m.sender }}</div>
                     <div class="timestamp">
-                        {% if m.timestamp %}
-                            {{ m.timestamp.strftime('%d %b %Y, %I:%M %p') }}
-                        {% endif %}
+                        {% if m.timestamp %}{{ m.timestamp.strftime('%d %b %Y, %I:%M %p') }}{% endif %}
                     </div>
                 </div>
-
-                <!-- Message content -->
                 <div class="message-content">{{ m.content }}</div>
-
-                <!--
-                    Entity tags — show detected entities below the message.
-                    Each entity gets a colour-coded tag based on its category.
-                    Only show entities that have a colour defined in the CSS.
-                -->
                 {% set shown_categories = ['DateTime', 'URL', 'PhoneNumber', 'Person', 'Organization', 'Location'] %}
                 {% if m.entities %}
                 <div class="entity-tags">
                     {% for entity in m.entities %}
                     {% if entity.category in shown_categories %}
-                    <span class="entity-tag {{ entity.category }}">
-                        {{ entity.category }}: {{ entity.text }}
-                    </span>
+                    <span class="entity-tag {{ entity.category }}">{{ entity.category }}: {{ entity.text }}</span>
                     {% endif %}
                     {% endfor %}
                 </div>
                 {% endif %}
-
-                <!--
-                    Key phrases — shown as subtle italic tags below the entities.
-                    Limited to 5 phrases to avoid cluttering the card.
-                -->
                 {% if m.key_phrases %}
                 <div class="key-phrases">
                     {% for phrase in m.key_phrases[:5] %}
@@ -370,19 +269,75 @@
                     {% endfor %}
                 </div>
                 {% endif %}
-
             </div>
             {% endfor %}
-
         {% else %}
-            <!-- Empty state — no messages matched this filter -->
-            <div class="empty">
+            <div class="empty-state">
+                <div class="empty-icon">∅</div>
                 <h2>No results found</h2>
                 <p>No messages matched the {{ filter_name }} filter in this chat.</p>
             </div>
         {% endif %}
 
     </div>
+
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-inner">
+            <div class="spinner"></div>
+            <div class="loading-title" id="loading-title">Filtering messages</div>
+            <div class="loading-msg" id="loading-message">Finding relevant messages...</div>
+            <div class="progress-track">
+                <div class="progress-fill" id="progress-bar"></div>
+            </div>
+            <div class="progress-label" id="progress-label">Starting...</div>
+        </div>
+    </div>
+
+    <script>
+        function updateThemeIcon() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            document.getElementById('theme-icon').textContent = isDark ? '☀' : '⏾';
+        }
+        function toggleTheme() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+            localStorage.setItem('theme', isDark ? 'light' : 'dark');
+            updateThemeIcon();
+        }
+        updateThemeIcon();
+
+        const filterMsgs = [
+            "Finding relevant messages...",
+            "Applying filter...",
+            "Sorting results...",
+            "Almost ready...",
+        ];
+        const filterSteps = [
+            { progress: 20, label: "Scanning messages..." },
+            { progress: 50, label: "Applying filter criteria..." },
+            { progress: 80, label: "Sorting results..." },
+            { progress: 95, label: "Almost done..." },
+        ];
+        let loadIdx = 0;
+
+        function startLoading(title) {
+            document.getElementById('loading-overlay').style.display = 'flex';
+            document.getElementById('loading-title').textContent = title || 'Loading...';
+            loadIdx = 0;
+            updateLoadStep();
+            setInterval(() => {
+                if (loadIdx < filterSteps.length - 1) { loadIdx++; updateLoadStep(); }
+            }, 2000);
+        }
+        function updateLoadStep() {
+            document.getElementById('progress-bar').style.width = filterSteps[loadIdx].progress + '%';
+            document.getElementById('progress-label').textContent = filterSteps[loadIdx].label;
+            document.getElementById('loading-message').textContent = filterMsgs[loadIdx];
+        }
+        document.querySelectorAll('a[href^="/filter/"]').forEach(link => {
+            link.addEventListener('click', () => startLoading('Filtering messages'));
+        });
+    </script>
 
 </body>
 </html>

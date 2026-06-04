@@ -4,186 +4,239 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WhatsApp Note Extractor</title>
+    <script>if (localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark');</script>
     <style>
-        /* ── RESET AND BASE ───────────────────────────────────────────────── */
-        /* Remove default browser margins and padding, use border-box sizing
-           so padding is included in element width calculations */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --bg: #f6f7f9; --bg-secondary: #eef0f3; --surface: #ffffff; --surface-hover: #f9fafb;
+            --border: #e2e5ea; --border-hover: #c5cad3; --text-primary: #0d1117; --text-secondary: #57606a;
+            --text-tertiary: #8b949e; --accent: #1a1a2e; --accent-hover: #2d2d5a; --accent-text: #ffffff;
+            --destructive: #cf222e; --success: #1a7f37;
+            --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px;
+            --shadow-xs: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.04);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,0.10), 0 4px 12px rgba(0,0,0,0.06);
+            --transition: 0.16s ease;
         }
-
-        /* Set the base font and background for the entire page */
+        [data-theme="dark"] {
+            --bg: #0d0d14; --bg-secondary: #111118; --surface: #16161f; --surface-hover: #1e1e2a;
+            --border: #2a2a3a; --border-hover: #3d3d52; --text-primary: #e6edf3; --text-secondary: #8b949e;
+            --text-tertiary: #484f58; --accent: #6366f1; --accent-hover: #818cf8; --accent-text: #ffffff;
+            --destructive: #f85149; --success: #3fb950;
+            --shadow-xs: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.35), 0 1px 3px rgba(0,0,0,0.25);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.4), 0 2px 6px rgba(0,0,0,0.3);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.35);
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            background-color: #f5f5f7;
-            color: #1a1a2e;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background: var(--bg); color: var(--text-primary);
+            min-height: 100vh; display: flex; flex-direction: column;
+            transition: background var(--transition), color var(--transition);
         }
-
-        /* ── UPLOAD CARD ──────────────────────────────────────────────────── */
-        /* The white card in the centre of the page */
-        .card {
-            background: white;
-            border-radius: 16px;
-            padding: 48px;
-            width: 100%;
-            max-width: 480px;
-            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
-            text-align: center;
+        .navbar {
+            position: sticky; top: 0; z-index: 100; background: var(--surface);
+            border-bottom: 1px solid var(--border); padding: 0 32px; height: 58px;
+            display: flex; align-items: center; justify-content: space-between;
+            transition: background var(--transition), border-color var(--transition);
         }
-
-        /* The small label above the title */
-        .label {
-            font-size: 12px;
-            font-weight: 600;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            color: #6b6b8a;
-            margin-bottom: 12px;
+        .navbar-brand { display: flex; align-items: center; gap: 12px; }
+        .brand-mark {
+            width: 34px; height: 34px; background: var(--accent); color: var(--accent-text);
+            border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 700; letter-spacing: 0.5px; flex-shrink: 0;
+            transition: background var(--transition);
         }
-
-        h1 {
-            font-size: 24px;
-            font-weight: 700;
-            color: #1a1a2e;
-            margin-bottom: 8px;
+        .brand-name { font-size: 14px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.3px; line-height: 1.2; }
+        .brand-sub { font-size: 11px; color: var(--text-tertiary); letter-spacing: 0.2px; line-height: 1; }
+        .navbar-actions { display: flex; align-items: center; gap: 8px; }
+        .theme-toggle {
+            width: 34px; height: 34px; border: 1px solid var(--border); background: transparent;
+            border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: center;
+            justify-content: center; font-size: 14px; color: var(--text-secondary);
+            transition: all var(--transition);
         }
-
-        .subtitle {
-            font-size: 14px;
-            color: #6b6b8a;
-            line-height: 1.6;
-            margin-bottom: 32px;
-        }
-
-        /* ── FILE UPLOAD AREA ─────────────────────────────────────────────── */
-        /* The dashed drop zone where users select their file */
-        .upload-area {
-            border: 2px dashed #ccccdd;
-            border-radius: 12px;
-            padding: 32px;
-            margin-bottom: 24px;
-            cursor: pointer;
-            transition: border-color 0.2s;
-        }
-
-        /* Highlight the border when the user hovers over the upload area */
-        .upload-area:hover {
-            border-color: #1a1a2e;
-        }
-
-        .upload-icon {
-            font-size: 32px;
-            margin-bottom: 12px;
-        }
-
-        .upload-area p {
-            font-size: 14px;
-            color: #6b6b8a;
-            margin-bottom: 4px;
-        }
-
-        .upload-area small {
-            font-size: 12px;
-            color: #aaaaaa;
-        }
-
-        /* Hide the default file input — we trigger it via the upload area click */
-        #file-input {
-            display: none;
-        }
-
-        /* Show the selected filename here once a file is chosen */
-        #file-name {
-            font-size: 13px;
-            color: #1a1a2e;
-            margin-top: 10px;
-            font-weight: 500;
-        }
-
-        /* ── SUBMIT BUTTON ────────────────────────────────────────────────── */
+        .theme-toggle:hover { background: var(--bg-secondary); border-color: var(--border-hover); color: var(--text-primary); }
         .btn {
-            width: 100%;
-            padding: 14px;
-            background-color: #1a1a2e;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s;
+            display: inline-flex; align-items: center; gap: 6px; padding: 0 14px; height: 34px;
+            border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; text-decoration: none;
+            cursor: pointer; border: 1px solid transparent; transition: all var(--transition); letter-spacing: -0.1px;
         }
-
-        .btn:hover {
-            background-color: #2d2d5a;
+        .btn-primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+        .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+        .btn-secondary { background: var(--surface); color: var(--text-primary); border-color: var(--border); }
+        .btn-secondary:hover { background: var(--bg-secondary); border-color: var(--border-hover); }
+        .main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 24px; }
+        .card {
+            width: 100%; max-width: 460px; background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius-xl); padding: 40px; box-shadow: var(--shadow-md);
+            transition: background var(--transition), border-color var(--transition);
         }
-
-        /* ── ERROR MESSAGE ────────────────────────────────────────────────── */
-        /* Shown when the user uploads a non-zip file */
-        .error {
-            background-color: #fff0f0;
-            color: #cc0000;
-            border-radius: 8px;
-            padding: 12px 16px;
-            font-size: 13px;
-            margin-bottom: 20px;
-            text-align: left;
+        .card-eyebrow {
+            font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+            color: var(--text-tertiary); margin-bottom: 10px;
         }
+        .card-title { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; color: var(--text-primary); margin-bottom: 8px; line-height: 1.2; }
+        .card-subtitle { font-size: 13px; color: var(--text-secondary); margin-bottom: 28px; line-height: 1.5; }
+        .error-box {
+            background: #fff0f0; border: 1px solid #f5c6c6; border-radius: var(--radius-sm);
+            padding: 10px 14px; font-size: 13px; color: var(--destructive); margin-bottom: 20px;
+        }
+        [data-theme="dark"] .error-box { background: #2d1515; border-color: #5a2020; }
+        .upload-area {
+            border: 2px dashed var(--border); border-radius: var(--radius-lg); padding: 32px;
+            text-align: center; cursor: pointer; margin-bottom: 20px;
+            transition: border-color var(--transition), background var(--transition);
+        }
+        .upload-area:hover { border-color: var(--accent); background: var(--bg-secondary); }
+        .upload-icon-box {
+            width: 40px; height: 40px; border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm); display: inline-flex; align-items: center;
+            justify-content: center; font-size: 18px; color: var(--text-secondary); margin-bottom: 12px;
+            transition: all var(--transition);
+        }
+        .upload-area:hover .upload-icon-box { border-color: var(--accent); color: var(--accent); }
+        .upload-label { font-size: 14px; font-weight: 500; color: var(--text-primary); margin-bottom: 4px; }
+        .upload-hint { font-size: 12px; color: var(--text-tertiary); }
+        .file-pill {
+            display: none; align-items: center; background: var(--bg-secondary); border: 1px solid var(--border);
+            border-radius: 99px; padding: 4px 12px; font-size: 12px; font-weight: 500;
+            color: var(--text-secondary); margin-top: 12px;
+            max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        #file-input { display: none; }
+        .submit-btn {
+            width: 100%; height: 44px; background: var(--accent); color: var(--accent-text);
+            border: 1px solid var(--accent); border-radius: var(--radius-sm); font-size: 14px;
+            font-weight: 600; cursor: pointer; letter-spacing: -0.1px; transition: all var(--transition);
+        }
+        .submit-btn:hover { background: var(--accent-hover); border-color: var(--accent-hover); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+        .loading-overlay {
+            display: none; position: fixed; inset: 0; background: var(--surface);
+            z-index: 9999; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .loading-inner { text-align: center; max-width: 380px; padding: 0 24px; }
+        .spinner {
+            width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--accent);
+            border-radius: 50%; animation: spin 0.75s linear infinite; margin: 0 auto 24px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-title { font-size: 18px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.4px; margin-bottom: 8px; }
+        .loading-msg { font-size: 13px; color: var(--text-secondary); margin-bottom: 28px; line-height: 1.5; }
+        .progress-track { width: 100%; background: var(--bg-secondary); border-radius: 99px; height: 6px; overflow: hidden; margin-bottom: 10px; }
+        .progress-fill { height: 100%; background: var(--accent); border-radius: 99px; width: 0%; transition: width 0.4s ease; }
+        .progress-label { font-size: 11px; color: var(--text-tertiary); }
+        @media (max-width: 768px) { .navbar { padding: 0 16px; } .brand-sub { display: none; } .main { padding: 24px 16px; } }
+        @media (max-width: 480px) { .card { padding: 28px 20px; } .navbar-brand .brand-name { font-size: 13px; } }
     </style>
 </head>
 <body>
-    <div class="card">
-        <p class="label">IEEE CS x GCE AI/ML Track</p>
-        <h1>WhatsApp Note Extractor</h1>
-        <p class="subtitle">
-            Upload a WhatsApp group chat export and get an instant
-            breakdown of activity, contributors, and more.
-        </p>
 
-        <!-- Show error message if Flask passed one (e.g. wrong file type) -->
-        {% if error %}
-        <div class="error">{{ error }}</div>
-        {% endif %}
-
-        <!--
-            The form submits to the same URL (/) using POST.
-            enctype="multipart/form-data" is required for file uploads —
-            without it, the file contents are not sent to the server.
-        -->
-        <form action="/" method="POST" enctype="multipart/form-data">
-
-            <!--
-                Clicking the upload area triggers a click on the hidden
-                file input, which opens the file picker dialog.
-            -->
-            <div class="upload-area" onclick="document.getElementById('file-input').click()">
-                <div class="upload-icon">+</div>
-                <p>Click to select your WhatsApp export</p>
-                <small>Accepts .zip files only</small>
-                <!-- Shows the selected filename after the user picks a file -->
-                <div id="file-name">No file selected</div>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <div class="brand-mark">NX</div>
+            <div>
+                <div class="brand-name">WhatsApp Note Extractor</div>
+                <div class="brand-sub">IEEE CS x GCE AI/ML Track</div>
             </div>
+        </div>
+        <div class="navbar-actions">
+            <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+                <span id="theme-icon">⏾</span>
+            </button>
+        </div>
+    </nav>
 
-            <!--
-                The actual file input. name="file" must match what
-                Flask looks for in request.files["file"] in app.py.
-            -->
-            <input
-                type="file"
-                id="file-input"
-                name="file"
-                accept=".zip"
-                onchange="document.getElementById('file-name').textContent = this.files[0].name"
-            >
+    <main class="main">
+        <div class="card">
+            <p class="card-eyebrow">IEEE CS x GCE AI/ML Track</p>
+            <h1 class="card-title">WhatsApp Note Extractor</h1>
+            <p class="card-subtitle">Upload a group chat export and ask anything about it.</p>
 
-            <button type="submit" class="btn">Analyse Chat</button>
-        </form>
+            {% if error %}
+            <div class="error-box">{{ error }}</div>
+            {% endif %}
+
+            <form action="/" method="POST" enctype="multipart/form-data">
+                <div class="upload-area" onclick="document.getElementById('file-input').click()">
+                    <div class="upload-icon-box">↑</div>
+                    <div class="upload-label">Click to select your WhatsApp export</div>
+                    <div class="upload-hint">Accepts .zip files only</div>
+                    <div id="file-name" class="file-pill"></div>
+                </div>
+                <input type="file" id="file-input" name="file" accept=".zip" onchange="handleFileSelect(this)">
+                <button type="submit" class="submit-btn">Analyse Chat</button>
+            </form>
+        </div>
+    </main>
+
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-inner">
+            <div class="spinner"></div>
+            <div class="loading-title">Analysing your chat</div>
+            <div class="loading-msg" id="loading-message">Parsing messages...</div>
+            <div class="progress-track">
+                <div class="progress-fill" id="progress-bar"></div>
+            </div>
+            <div class="progress-label" id="progress-label">Starting...</div>
+        </div>
     </div>
+
+    <script>
+        function updateThemeIcon() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            document.getElementById('theme-icon').textContent = isDark ? '☀' : '⏾';
+        }
+        function toggleTheme() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+            localStorage.setItem('theme', isDark ? 'light' : 'dark');
+            updateThemeIcon();
+        }
+        updateThemeIcon();
+
+        function handleFileSelect(input) {
+            const pill = document.getElementById('file-name');
+            if (input.files.length > 0) {
+                pill.textContent = input.files[0].name;
+                pill.style.display = 'inline-flex';
+            }
+        }
+
+        const loadMessages = [
+            "Parsing messages...",
+            "Running Azure AI entity extraction...",
+            "Extracting key phrases...",
+            "Building your dashboard...",
+            "Almost ready...",
+        ];
+        const loadSteps = [
+            { progress: 8,  label: "Reading export file..." },
+            { progress: 28, label: "Extracting entities with Azure AI..." },
+            { progress: 52, label: "Running key phrase extraction..." },
+            { progress: 74, label: "Building filter index..." },
+            { progress: 92, label: "Finalising dashboard..." },
+        ];
+        let stepIdx = 0;
+
+        function startLoading() {
+            document.getElementById('loading-overlay').style.display = 'flex';
+            stepIdx = 0;
+            updateLoadStep();
+            setInterval(() => {
+                if (stepIdx < loadSteps.length - 1) { stepIdx++; updateLoadStep(); }
+            }, 2800);
+        }
+        function updateLoadStep() {
+            document.getElementById('progress-bar').style.width = loadSteps[stepIdx].progress + '%';
+            document.getElementById('progress-label').textContent = loadSteps[stepIdx].label;
+            document.getElementById('loading-message').textContent = loadMessages[stepIdx];
+        }
+        document.querySelector('form').addEventListener('submit', function () {
+            if (document.getElementById('file-input').files.length > 0) startLoading();
+        });
+    </script>
+
 </body>
 </html>

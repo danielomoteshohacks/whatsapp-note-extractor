@@ -15,6 +15,7 @@ from dashboard.stats import compute_stats
 from ai.entity_extractor import extract_entities, entity_summary
 from ai.key_phrase_extractor import extract_key_phrases
 from parser.filters import apply_filter
+from ai.query_engine import run_query
 
 app = Flask(__name__)
 
@@ -106,6 +107,36 @@ def filter_results(filter_name):
         filter_name=label,
         total=len(results),
         source="filter"
+    )
+
+
+
+# ─── ROUTE 4: NATURAL LANGUAGE SEARCH ────────────────────────────────────────
+# Handles free-form text queries from the search bar on the dashboard.
+# Gemini understands the query, extracts intent, and we search the messages.
+
+@app.route("/search", methods=["POST"])
+def search():
+    global _messages_store
+
+    if not _messages_store:
+        return redirect(url_for("index"))
+
+    query = request.form.get("query", "").strip()
+
+    if not query:
+        return redirect(url_for("index"))
+
+    answer, results = run_query(query, _messages_store)
+    summary = answer
+
+    return render_template(
+        "results.html",
+        messages=results,
+        filter_name=f'Search: "{query}"',
+        total=len(results),
+        source="search",
+        query_summary=answer
     )
 
 
